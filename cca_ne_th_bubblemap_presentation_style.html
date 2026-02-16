@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>CCA Bubble Map – Northeast Thailand (Presentation-style)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; width: 100%; }
+    .legend {
+      background: rgba(255,255,255,0.92);
+      padding: 10px 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+      max-width: 420px;
+    }
+    .legend h3 {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f2f2f2;
+      margin: 2px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+    .swatch {
+      display:inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 6px;
+      border: 1px solid rgba(0,0,0,0.15);
+      vertical-align: middle;
+    }
+    .note {
+      margin-top: 8px;
+      color: #444;
+    }
+    .note b { color: #000; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script>
+  // ----------------------------
+  // DATA
+  // ----------------------------
+  const provinces = [{"name": "Khon Kaen", "lat": 16.4419, "lng": 102.835, "dist_km": 0.0, "mult": 1.3, "asr_male": 24.96, "asr_female": 11.05}, {"name": "Udon Thani", "lat": 17.4138, "lng": 102.787, "dist_km": 108.19090460702392, "mult": 1.020756312349528, "asr_male": 19.598521197110937, "asr_female": 8.676428654970987}, {"name": "Ubon Ratchathani", "lat": 15.2448, "lng": 104.8473, "dist_km": 253.0848687651134, "mult": 0.7000000000000001, "asr_male": 13.440000000000001, "asr_female": 5.95}, {"name": "Nakhon Ratchasima", "lat": 14.9799, "lng": 102.0978, "dist_km": 180.70543093653149, "mult": 0.8569163013466633, "asr_male": 16.452792985855936, "asr_female": 7.283788561446638}, {"name": "Roi Et", "lat": 16.0567, "lng": 103.6531, "dist_km": 97.27231668124965, "mult": 1.0462523544880646, "asr_male": 20.08804520617084, "asr_female": 8.89314501314855}, {"name": "Maha Sarakham", "lat": 16.184, "lng": 103.3, "dist_km": 57.31423776089364, "mult": 1.1423667039265761, "asr_male": 21.93344071539026, "asr_female": 9.710116983375897}, {"name": "Kalasin", "lat": 16.4314, "lng": 103.5066, "dist_km": 71.63612119899666, "mult": 1.107322703469267, "asr_male": 21.260595906609925, "asr_female": 9.41224297948877}, {"name": "Sakon Nakhon", "lat": 17.1546, "lng": 104.1348, "dist_km": 159.45060922728595, "mult": 0.9041093431278333, "asr_male": 17.3588993880544, "asr_female": 7.684929416586583}, {"name": "Surin", "lat": 14.8829, "lng": 103.4937, "dist_km": 187.14845384555034, "mult": 0.8427230537004735, "asr_male": 16.180282631049092, "asr_female": 7.1631459564540245}, {"name": "Buriram", "lat": 14.993, "lng": 103.1029, "dist_km": 163.6421576924367, "mult": 0.8947552798079093, "asr_male": 17.17930137231186, "asr_female": 7.605419878367229}, {"name": "Chaiyaphum", "lat": 15.8067, "lng": 102.0316, "dist_km": 111.14703664514441, "mult": 1.0138987289962, "asr_male": 19.46685559672704, "asr_female": 8.6181391964677}, {"name": "Nong Khai", "lat": 17.8783, "lng": 102.7413, "dist_km": 160.03031665333148, "mult": 0.9028141885848129, "asr_male": 17.334032420828407, "asr_female": 7.6739206029709095}, {"name": "Nong Bua Lamphu", "lat": 17.2041, "lng": 102.4407, "dist_km": 94.57427394185045, "mult": 1.0525956097452989, "asr_male": 20.209835707109736, "asr_female": 8.94706268283504}, {"name": "Mukdahan", "lat": 16.5453, "lng": 104.7235, "dist_km": 201.6780013485196, "mult": 0.8108924534813391, "asr_male": 15.56913510684171, "asr_female": 6.892585854591382}, {"name": "Yasothon", "lat": 15.7926, "lng": 104.1453, "dist_km": 157.4945749548289, "mult": 0.9084829077136253, "asr_male": 17.442871828101605, "asr_female": 7.7221047155658145}, {"name": "Amnat Charoen", "lat": 15.8656, "lng": 104.6269, "dist_km": 201.82538426515475, "mult": 0.810570776765432, "asr_male": 15.562958913896294, "asr_female": 6.889851602506172}, {"name": "Si Sa Ket", "lat": 15.1144, "lng": 104.3298, "dist_km": 217.65120694351396, "mult": 0.7761624101310143, "asr_male": 14.902318274515473, "asr_female": 6.597380486113622}, {"name": "Loei", "lat": 17.49, "lng": 101.727, "dist_km": 165.73640085922452, "mult": 0.8900906724471014, "asr_male": 17.089740910984347, "asr_female": 7.565770715800362}, {"name": "Bueng Kan", "lat": 18.3609, "lng": 103.6464, "dist_km": 230.09487827724843, "mult": 0.7492836828912792, "asr_male": 14.38624671151256, "asr_female": 6.368911304575874}, {"name": "Nakhon Phanom", "lat": 17.4108, "lng": 104.7784, "dist_km": 233.1198725975644, "mult": 0.7427718407818075, "asr_male": 14.261219343010703, "asr_female": 6.313560646645364}];
+  const anchorName = "Khon Kaen";
+  const ASR_MALE_NE = 19.2;
+  const ASR_FEMALE_NE = 8.5;
+  const FLUKE_PREV_NE = 34.6;
+
+  // Presentation-style provincial gradient:
+  // Uses Khon Kaen (registry anchor) as higher-intensity point and scales down with distance.
+  // IMPORTANT: This is NOT province-level registry estimation; it is a visualization aid.
+  const nePoly = [[18.6, 100.9], [20.1, 104.9], [18.7, 105.6], [14.0, 105.7], [13.6, 103.2], [14.0, 101.1], [15.4, 100.8], [18.6, 100.9]];
+
+  // ----------------------------
+  // MAP INIT
+  // ----------------------------
+  const map = L.map('map').setView([16.6, 103.3], 6.5);
+
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // ----------------------------
+  // Bubble sizing and color ramp
+  // ----------------------------
+  function radiusFromASR(asr) {
+    // perceptual scaling
+    return 3 + Math.sqrt(asr) * 3.2;
+  }
+
+  function colorFromASR(asr, minASR, maxASR) {
+    // 3-stop gradient: light yellow -> orange -> dark red
+    const t = (asr - minASR) / (maxASR - minASR + 1e-9); // 0..1
+    // interpolate RGB manually
+    // yellow: (255, 243, 153)  orange: (255, 153, 51)  dark red: (153, 0, 0)
+    function lerp(a,b,x) { return Math.round(a + (b-a)*x); }
+    let r,g,b;
+    if (t < 0.5) {
+      const x = t/0.5;
+      r = lerp(255, 255, x);
+      g = lerp(243, 153, x);
+      b = lerp(153, 51, x);
+    } else {
+      const x = (t-0.5)/0.5;
+      r = lerp(255, 153, x);
+      g = lerp(153, 0, x);
+      b = lerp(51, 0, x);
+    }
+    return `rgb(${r},${g},${b})`;
+  }
+
+  const maleVals = provinces.map(p => p.asr_male);
+  const femaleVals = provinces.map(p => p.asr_female);
+  const maleMin = Math.min(...maleVals), maleMax = Math.max(...maleVals);
+  const femaleMin = Math.min(...femaleVals), femaleMax = Math.max(...femaleVals);
+
+  const maleLayer = L.layerGroup();
+  const femaleLayer = L.layerGroup();
+
+  provinces.forEach(p => {
+    const maleColor = colorFromASR(p.asr_male, maleMin, maleMax);
+    const femaleColor = colorFromASR(p.asr_female, femaleMin, femaleMax);
+
+    const commonMeta = `
+      <br/><small>
+        <b>Presentation-style scaling:</b> anchored at <i>${anchorName}</i> and decreased by distance.<br/>
+        Regional ASR (Northeast, 2012–2021): Male ${ASR_MALE_NE.toFixed(1)}, Female ${ASR_FEMALE_NE.toFixed(1)} per 100,000 PY.
+      </small>
+    `;
+
+    L.circleMarker([p.lat, p.lng], {
+      radius: radiusFromASR(p.asr_male),
+      color: 'rgba(0,0,0,0.35)',
+      weight: 1,
+      fillColor: maleColor,
+      fillOpacity: 0.65
+    }).bindPopup(`
+      <b>${p.name}</b><br/>
+      <span class="pill">Male ASR (scaled)</span> ${p.asr_male.toFixed(1)} / 100,000 PY<br/>
+      <span class="pill">Distance to anchor</span> ${p.dist_km.toFixed(0)} km
+      ${commonMeta}
+    `).addTo(maleLayer);
+
+    L.circleMarker([p.lat, p.lng], {
+      radius: radiusFromASR(p.asr_female),
+      color: 'rgba(0,0,0,0.35)',
+      weight: 1,
+      fillColor: femaleColor,
+      fillOpacity: 0.65
+    }).bindPopup(`
+      <b>${p.name}</b><br/>
+      <span class="pill">Female ASR (scaled)</span> ${p.asr_female.toFixed(1)} / 100,000 PY<br/>
+      <span class="pill">Distance to anchor</span> ${p.dist_km.toFixed(0)} km
+      ${commonMeta}
+    `).addTo(femaleLayer);
+  });
+
+  // Anchor marker
+  const anchor = provinces.find(p => p.name === anchorName);
+  if (anchor) {
+    L.marker([anchor.lat, anchor.lng]).addTo(map).bindPopup(
+      `<b>Anchor (Registry focus):</b> ${anchorName}<br/>
+       Used as high-intensity anchor for presentation-style provincial scaling.`
+    );
+  }
+
+  // ----------------------------
+  // Liver fluke overlay (regional)
+  // ----------------------------
+  function flukeColor(pct) {
+    const clamped = Math.max(0, Math.min(40, pct));
+    const alpha = 0.10 + (clamped / 40) * 0.35; // 0.10..0.45
+    return `rgba(255, 0, 0, ${alpha.toFixed(3)})`;
+  }
+
+  const flukeOverlay = L.polygon(nePoly, {
+    color: 'rgba(255,0,0,0.55)',
+    weight: 2,
+    fillColor: flukeColor(FLUKE_PREV_NE),
+    fillOpacity: 1.0
+  }).bindPopup(`
+    <b>Opisthorchis viverrini prevalence (regional)</b><br/>
+    Northeast Thailand: <span class="pill">${FLUKE_PREV_NE.toFixed(1)}%</span><br/>
+    <small>Regional prevalence reported in the paper.</small>
+  `);
+
+  // ----------------------------
+  // Controls
+  // ----------------------------
+  const overlayMaps = {
+    "CCA bubble map (Male, scaled by province for visualization)": maleLayer,
+    "CCA bubble map (Female, scaled by province for visualization)": femaleLayer,
+    "Liver fluke prevalence overlay (regional)": flukeOverlay
+  };
+
+  L.control.layers({"OpenStreetMap": osm}, overlayMaps, {collapsed: false}).addTo(map);
+
+  // default on
+  maleLayer.addTo(map);
+  flukeOverlay.addTo(map);
+
+  // Legend / disclaimer
+  const legend = L.control({position: 'bottomleft'});
+  legend.onAdd = function() {
+    const div = L.DomUtil.create('div', 'legend');
+    div.innerHTML = `
+      <h3>CCA Bubble Map – Northeast Thailand</h3>
+      <div><span class="pill">Bubble size</span> proportional to <b>scaled ASR</b> (per 100,000 PY)</div>
+      <div><span class="pill">Color</span> light yellow → orange → dark red (lower → higher)</div>
+      <div style="margin-top:6px;">
+        <div><span class="swatch" style="background: rgb(255,243,153);"></span>Lower</div>
+        <div><span class="swatch" style="background: rgb(255,153,51);"></span>Moderate</div>
+        <div><span class="swatch" style="background: rgb(153,0,0);"></span>Highest</div>
+      </div>
+      <div class="note">
+        <b>Important:</b> Province bubbles are a <b>presentation-style visualization</b>:
+        regional ASR values (Northeast Thailand, 2012–2021) are <b>applied and scaled</b> using distance from the Khon Kaen anchor.
+        This does <b>not</b> represent province-level registry estimates.
+      </div>
+    `;
+    return div;
+  };
+  legend.addTo(map);
+</script>
+</body>
+</html>
